@@ -229,9 +229,10 @@ def replydate(message):
             date = []
             for i in data:
                 wealth.append(int(i[1]))
-                date.append(i[4][2:])
+                date.append(i[4][:-3])
             plt.plot(date, wealth)
             plt.xlabel('Date')
+            plt.xticks(rotation=90, fontsize=5)
             plt.ylabel('Wealth')
             plt.title('Wealth Graph')
             plt.savefig("graph{}.png".format(chat_id))
