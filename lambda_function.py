@@ -232,7 +232,7 @@ def replydate(message):
                 date.append(i[4][:-3])
             plt.plot(date, wealth)
             plt.xlabel('Date')
-            plt.xticks(rotation=90, fontsize=5)
+            plt.xticks(rotation=0, fontsize=5)
             plt.ylabel('Wealth')
             plt.title('Wealth Graph')
             plt.savefig("graph{}.png".format(chat_id))
