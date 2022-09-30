@@ -10,6 +10,13 @@ import schedule
 import matplotlib.pyplot as plt
 
 
+api = ""
+bot = telebot.TeleBot(api)
+global add
+add = False
+
+
+
 ############################## database ########################################
 
 class Database:
@@ -60,11 +67,6 @@ class Database:
 
 ############################## end database ####################################
 
-
-api = "5283036143:AAFgyhBPjv__vhkDGB5pXPPSlI5PrrE8pe0"
-bot = telebot.TeleBot(api)
-global add
-add = False
 
 
 # Create a function to handle the "/start" and "/help" commands
