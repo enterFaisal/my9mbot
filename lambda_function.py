@@ -16,7 +16,6 @@ global add
 add = False
 
 
-
 ############################## database ########################################
 
 class Database:
@@ -66,7 +65,6 @@ class Database:
         return self.c.fetchall()
 
 ############################## end database ####################################
-
 
 
 # Create a function to handle the "/start" and "/help" commands
@@ -168,6 +166,8 @@ def file(message):
 # Create a function to handle the "/add" command
 @bot.message_handler(commands=['add'])
 def replydate(message):
+    bot.reply_to(message, "ok i will add your data.")
+    bot.reply_to(message, "send (exit) to exit.")
 
     global add
     add = True
@@ -185,6 +185,8 @@ def replydate(message):
         file(message)
         bot.reply_to(
             message, "please send the id of the data you want to delete.")
+        bot.send_message(message.chat.id, "or send (exit) to exit.")
+
         bot.register_next_step_handler(message, delete)
     else:
         bot.reply_to(message, "there is no data to delete.")
@@ -200,6 +202,7 @@ def replydate(message):
         file(message)
         bot.reply_to(
             message, "please send the id of the data you want to update.")
+        bot.send_message(message.chat.id, "or send (exit) to exit.")
         bot.register_next_step_handler(message, askupdate)
     else:
         bot.reply_to(message, "there is no data to update.")
@@ -253,9 +256,13 @@ def replydate(message):
 
 def getwealth(message):
     chat_id = message.chat.id
-    bot.send_message(chat_id, "Please enter your wealth:")
-
-    bot.register_next_step_handler(message, getlearning)
+    if message.text == "exit":
+        bot.reply_to(message, "ok, i will not add your data.")
+        global add
+        add = False
+    else:
+        bot.send_message(chat_id, "Please enter your wealth:")
+        bot.register_next_step_handler(message, getlearning)
 
 
 def getlearning(message):
