@@ -1,5 +1,4 @@
 import sys
-from tkinter import Y
 import telebot
 import datetime
 import calendar
