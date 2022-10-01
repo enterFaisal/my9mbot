@@ -1,4 +1,5 @@
 import sys
+from tkinter import Y
 import telebot
 import datetime
 import calendar
@@ -60,9 +61,11 @@ class Database:
         self.c.execute("SELECT * FROM {}".format(self.chat_id))
         return self.c.fetchall()
 
-    def tableNames(self):
-        self.c.execute("SELECT name FROM sqlite_master WHERE type='table'")
-        return self.c.fetchall()
+    def tableNames():
+        conn = sqlite3.connect('Database.db')
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        return c.fetchall()
 
 ############################## end database ####################################
 
@@ -72,17 +75,17 @@ class Database:
 def replydate(message):
     bot.reply_to(
         message, "Hello, I am a bot that will help you calculate your wealth.\n"
-        "i will ask you in the first day of the month.\n"
-        "send /help to see this massage again.\n"
-        "send /date to see how many days left.\n"
-        "send /run to start.\n"
-        "send /file to get your data.\n"
-        "send /stop to stop.\n"
-        "send /add to add data.\n"
-        "send /delete to delete data.\n"
-        "send /update to update data.\n"
-        "send /status to see the run status.\n"
-        "send /graph to see the graph of your wealth.\n")
+        "i will ask you in the first day of the month.\n")
+    bot.send_message(message.chat.id, "send /help to see this massage again.\n"
+                     "send /date to see how many days left.\n"
+                     "send /run to start.\n"
+                     "send /file to get your data.\n"
+                     "send /stop to stop.\n"
+                     "send /add to add data.\n"
+                     "send /delete to delete data.\n"
+                     "send /update to update data.\n"
+                     "send /status to see the run status.\n"
+                     "send /graph to see the graph of your wealth.\n")
 
 
 # Create a function to handle the "/date" command
@@ -145,7 +148,7 @@ def replydate(message):
         else:
             bot.reply_to(message, "The bot is already stopped.")
     except:
-        bot.reply_to(message, "The bot is already stopped.")
+        bot.reply_to(message, "The bot didn't run yet.")
 
 
 # Create a function to handle the "/file" command
@@ -184,7 +187,7 @@ def replydate(message):
     if data:
         file(message)
         bot.reply_to(
-            message, "please send the id of the data you want to delete.")
+            message, "please send the id of the data you want to delete from (1 to {})".format(len(data)))
         bot.send_message(message.chat.id, "or send (exit) to exit.")
 
         bot.register_next_step_handler(message, delete)
@@ -201,7 +204,7 @@ def replydate(message):
     if data:
         file(message)
         bot.reply_to(
-            message, "please send the id of the data you want to update.")
+            message, "please send the id of the data you want to update from (1 to {}).".format(len(data)))
         bot.send_message(message.chat.id, "or send (exit) to exit.")
         bot.register_next_step_handler(message, askupdate)
     else:
@@ -218,7 +221,7 @@ def replydate(message):
         else:
             bot.reply_to(message, "The bot is stopped.")
     except:
-        bot.reply_to(message, "The bot isn't running.")
+        bot.reply_to(message, "The bot didn't run yet.")
 
 
 # Create a function to handle the "/graph" command
@@ -243,6 +246,7 @@ def replydate(message):
             plt.savefig("graph{}.png".format(chat_id))
             bot.send_photo(chat_id, open('graph{}.png'.format(chat_id), 'rb'))
             os.remove('graph{}.png'.format(chat_id))
+            plt.clf()
         else:
             bot.reply_to(message, "there is no data to make graph.")
     except:
@@ -350,6 +354,14 @@ def askupdate(message):
             db = Database(chat_id)
             data = db.select(id)
             if data:
+                id, wealth, learning, description, date = data[0]
+
+                bot.send_message(chat_id, f"id: {id}\n"
+                                 f"Wealth: {wealth}\n"
+                                 f"Learning: {learning}\n"
+                                 f"Description: {description}\n"
+                                 f"Date: {date}\n")
+
                 bot.send_message(
                     chat_id, "do you want to update the all column or only one box?")
                 bot.send_message(
@@ -482,16 +494,57 @@ def delete(message):
         try:
             id = int(message.text)
             db = Database(chat_id)
-            db.delete(id)
-            bot.send_message(chat_id, "Data deleted.")
+            data = db.select(id)
+            if data:
+                id, wealth, learning, description, date = data[0]
+                bot.send_message(chat_id, f"id: {id}\n"
+                                 f"Wealth: {wealth}\n"
+                                 f"Learning: {learning}\n"
+                                 f"Description: {description}\n"
+                                 f"Date: {date}\n")
+                bot.send_message(
+                    chat_id, "Are you sure you want to delete this data? (yes/no)")
+                bot.register_next_step_handler(message, delete2, id)
+            else:
+                bot.send_message(
+                    chat_id, "Please enter a valid id or (exit) to cancel.")
+                bot.register_next_step_handler(message, delete)
         except:
             bot.send_message(
                 chat_id, "Please enter a number or send exit to exit.")
             bot.register_next_step_handler(message, delete)
+
+
+def delete2(message, id):
+    chat_id = message.chat.id
+    if message.text == "exit" or message.text == "Exit":
+        bot.send_message(chat_id, "Ok, Bye.")
+    else:
+        if message.text == "yes" or message.text == "Yes" or message.text == "Y" or message.text == "y":
+            db = Database(chat_id)
+            db.delete(id)
+            bot.send_message(chat_id, "Data deleted.")
+        elif message.text == "no" or message.text == "No":
+            bot.send_message(chat_id, "Ok, Bye.")
+        else:
+            bot.send_message(
+                chat_id, "Please enter yes or no or (exit) to cancel.")
+            bot.register_next_step_handler(message, delete2, id)
+
 
 ######################################## end take data ########################################
 
 
 if __name__ == '__main__':
     print("Bot started")
+
+    tables = Database.tableNames()
+
+    # send message to all users
+    for table in tables:
+        try:
+            bot.send_message(table[0][1:], "Bot restarted.")
+        except:
+            pass
+
     bot.infinity_polling()
