@@ -169,7 +169,7 @@ def file(message):
 @bot.message_handler(commands=['add'])
 def replydate(message):
     bot.reply_to(message, "ok i will add your data.")
-    bot.reply_to(message, "send (exit) to exit.")
+    bot.send_message(message.chat.id, "or send (exit) to exit.")
 
     global add
     add = True
