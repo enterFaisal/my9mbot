@@ -539,7 +539,10 @@ def delete2(message, id):
 if __name__ == '__main__':
     print("Bot started")
 
-    tables = Database.tableNames()
+    try:
+        tables = Database.tableNames()
+    except:
+        tables = []
 
     # send message to all users
     for table in tables:
