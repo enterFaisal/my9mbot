@@ -64,7 +64,9 @@ class Database:
         conn = sqlite3.connect('Database.db')
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type='table'")
-        return c.fetchall()
+        tables = c.fetchall()
+        conn.close()
+        return tables
 
 ############################## end database ####################################
 
