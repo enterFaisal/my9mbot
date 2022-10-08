@@ -10,7 +10,7 @@ import schedule
 import matplotlib.pyplot as plt
 
 
-api = ""
+api = os.environ['apif']
 bot = telebot.TeleBot(api)
 global add
 add = False
