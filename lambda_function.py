@@ -119,7 +119,7 @@ def replydate(message):
 
         while isrun:
             schedule.run_pending()
-            time.sleep(1)
+            time.sleep(30)
 
 
 def run(message):
