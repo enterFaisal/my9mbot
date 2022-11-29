@@ -25,25 +25,25 @@ class Database:
         self.chat_id = "U"+str(chat_id)
         # create table if not exists named after chat_id
         self.c.execute(
-            "CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY, Wealth STRING, Learning STRING, Description STRING, Date STRING)".format(
+            "CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY, Wealth STRING, Learning STRING, Project STRING, Description STRING, Date STRING)".format(
                 self.chat_id))
         self.conn.commit()
 
     def __del__(self):
         self.conn.close()
 
-    def insert(self, wealth, learning, description, date):
+    def insert(self, wealth, learning, Project, description, date):
         self.c.execute(
-            "INSERT INTO {} (Wealth, Learning, Description, Date) VALUES (?, ?, ?, ?)".format(
+            "INSERT INTO {} (Wealth, Learning, Project, Description, Date) VALUES (?, ?, ?, ?, ?)".format(
                 self.chat_id),
-            (wealth, learning, description, date))
+            (wealth, learning, Project, description, date))
 
         self.conn.commit()
 
-    def update(self, wealth, learning, description, date, id):
+    def update(self, wealth, learning, Project, description, date, id):
         self.c.execute(
-            "UPDATE {} SET Wealth = ?, Learning = ?, Description = ?, Date = ? WHERE id = ?".format(
-                self.chat_id), (wealth, learning, description, date, id))
+            "UPDATE {} SET Wealth = ?, Learning = ?, Project = ?, Description = ?, Date = ? WHERE id = ?".format(
+                self.chat_id), (wealth, learning, Project, description, date, id))
         self.conn.commit()
 
     def delete(self, id):
@@ -160,7 +160,8 @@ def file(message):
     data = db.selectAll()
     with open('data{}.csv'.format(chat_id), 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['id', 'Wealth', 'Learning', 'Description', 'Date'])
+        writer.writerow(['id', 'Wealth', 'Learning',
+                        'Project', 'Description', 'Date'])
         writer.writerows(data)
     f.close()
     bot.send_document(chat_id, open('data{}.csv'.format(chat_id), 'rb'))
@@ -275,21 +276,28 @@ def getlearning(message):
     wealth = message.text
     if wealth.isdigit():
         bot.send_message(chat_id, "Please enter your learning:")
-        bot.register_next_step_handler(message, getdescription, wealth)
+        bot.register_next_step_handler(message, getproject, wealth)
     else:
         bot.send_message(chat_id, "Please enter your wealth as number:")
         bot.send_message(chat_id, "example: 10000000000")
         bot.register_next_step_handler(message, getlearning)
 
 
-def getdescription(message, wealth):
+def getproject(message, wealth):
     chat_id = message.chat.id
     learning = message.text
+    bot.send_message(chat_id, "Please enter your project:")
+    bot.register_next_step_handler(message, getdescription, wealth, learning)
+
+
+def getdescription(message, wealth, learning):
+    chat_id = message.chat.id
+    project = message.text
     bot.send_message(chat_id, "Please enter your description:")
-    bot.register_next_step_handler(message, gatdate, wealth, learning)
+    bot.register_next_step_handler(message, gatdate, wealth, learning, project)
 
 
-def gatdate(message, wealth, learning):
+def gatdate(message, wealth, learning, project):
     chat_id = message.chat.id
     description = message.text
     global add
@@ -300,30 +308,30 @@ def gatdate(message, wealth, learning):
                          "(example: 2018-01-01)")
 
         bot.register_next_step_handler(
-            message, getdate2, wealth, learning, description)
+            message, getdate2, wealth, learning, project, description)
     else:
         date = datetime.date.today().strftime("%Y-%m-%d")
-        sure(message, wealth, learning, description, date)
+        sure(message, wealth, learning, project, description, date)
 
 
-def getdate2(message, wealth, learning, description):
+def getdate2(message, wealth, learning, project, description):
     date = message.text
-    sure(message, wealth, learning, description, date)
+    sure(message, wealth, learning, project, description, date)
 
 
-def sure(message, wealth, learning, description, date):
+def sure(message, wealth, learning, project, description, date):
     chat_id = message.chat.id
     bot.send_message(chat_id, "Do you want to save this data? (y/n)")
     bot.register_next_step_handler(
-        message, save, wealth, learning, description, date)
+        message, save, wealth, learning, project, description, date)
 
 
-def save(message, wealth, learning, description, date):
+def save(message, wealth, learning, project, description, date):
     chat_id = message.chat.id
     global add
     if message.text == "y" or message.text == "Y" or message.text == "yes" or message.text == "Yes":
         db = Database(chat_id)
-        db.insert(wealth, learning, description, date)
+        db.insert(wealth, learning, project, description, date)
         bot.send_message(chat_id, "Data saved.")
     elif message.text == "n" or message.text == "N" or message.text == "no" or message.text == "No":
         bot.send_message(chat_id, "Do you want to enter data again? (y/n)")
@@ -331,7 +339,7 @@ def save(message, wealth, learning, description, date):
     else:
         bot.send_message(chat_id, "Please enter y/n")
         bot.register_next_step_handler(
-            message, save, wealth, learning, description, date)
+            message, save, wealth, learning, project, description, date)
 
 
 def again(message):
@@ -355,11 +363,12 @@ def askupdate(message):
             db = Database(chat_id)
             data = db.select(id)
             if data:
-                id, wealth, learning, description, date = data[0]
+                id, wealth, learning, project, description, date = data[0]
 
                 bot.send_message(chat_id, f"id: {id}\n"
                                  f"Wealth: {wealth}\n"
                                  f"Learning: {learning}\n"
+                                 f"Project: {project}\n"
                                  f"Description: {description}\n"
                                  f"Date: {date}\n")
 
@@ -368,7 +377,7 @@ def askupdate(message):
                 bot.send_message(
                     chat_id, "please enter (all) or the name of the box.")
                 bot.send_message(
-                    chat_id, "example: wealth, learning, description, date")
+                    chat_id, "example: wealth, learning, project, description, date")
                 bot.send_message(
                     chat_id, "if you want to exit, please enter (exit).")
                 bot.register_next_step_handler(message, ask2update, id)
@@ -395,7 +404,7 @@ def ask2update(message, id):
             bot.send_message(
                 chat_id, "please enter the new data in the following order:")
             bot.send_message(
-                chat_id, "Wealth#Learning#Description#Date")
+                chat_id, "Wealth#Learning#Project#Description#Date")
             bot.send_message(
                 chat_id, "example: 1000#text#text#2018-01-01")
             bot.register_next_step_handler(message, update, id, updatebox)
@@ -404,6 +413,9 @@ def ask2update(message, id):
             bot.register_next_step_handler(message, update, id, updatebox)
         elif message.text == "learning" or message.text == "Learning":
             bot.send_message(chat_id, "Please enter your learning:")
+            bot.register_next_step_handler(message, update, id, updatebox)
+        elif message.text == "project" or message.text == "Project":
+            bot.send_message(chat_id, "Please enter your project:")
             bot.register_next_step_handler(message, update, id, updatebox)
         elif message.text == "description" or message.text == "Description":
             bot.send_message(chat_id, "Please enter your description:")
@@ -425,16 +437,17 @@ def update(message, id, updatebox):
     else:
         if updatebox == "all" or updatebox == "All":
             try:
-                wealth, learning, description, date = message.text.split("#")
-                db.update(wealth, learning, description, date, id)
+                wealth, learning, project, description, date = message.text.split(
+                    "#")
+                db.update(wealth, learning, project, description, date, id)
                 bot.send_message(chat_id, "Data updated.")
             except:
                 bot.send_message(
                     chat_id, "Please enter the new data in the following order:")
                 bot.send_message(
-                    chat_id, "Wealth#Learning#Description#Date")
+                    chat_id, "Wealth#Learning#Project#Description#Date")
                 bot.send_message(
-                    chat_id, "example: 1000#text#text#2018-01-01")
+                    chat_id, "example: 1000#text#text#text#2018-01-01")
                 bot.send_message(
                     chat_id, "if you want to exit, please enter (exit).")
                 bot.register_next_step_handler(message, update, id, updatebox)
@@ -444,7 +457,7 @@ def update(message, id, updatebox):
             if updatebox == "wealth" or updatebox == "Wealth":
                 try:
                     wealth = message.text
-                    db.update(wealth, data[2], data[3], data[4], id)
+                    db.update(wealth, data[2], data[3], data[4], data[5], id)
                     bot.send_message(chat_id, "Data updated.")
                 except:
                     bot.send_message(
@@ -454,17 +467,28 @@ def update(message, id, updatebox):
             elif updatebox == "learning" or updatebox == "Learning":
                 try:
                     learning = message.text
-                    db.update(data[1], learning, data[3], data[4], id)
+                    db.update(data[1], learning, data[3], data[4], data[5], id)
                     bot.send_message(chat_id, "Data updated.")
                 except:
                     bot.send_message(
                         chat_id, "Please enter your learning or (exit) to cancel.")
                     bot.register_next_step_handler(
                         message, update, id, updatebox)
+            elif updatebox == "project" or updatebox == "Project":
+                try:
+                    project = message.text
+                    db.update(data[1], data[2], project, data[4], data[5], id)
+                    bot.send_message(chat_id, "Data updated.")
+                except:
+                    bot.send_message(
+                        chat_id, "Please enter your project or (exit) to cancel.")
+                    bot.register_next_step_handler(
+                        message, update, id, updatebox)
             elif updatebox == "description" or updatebox == "Description":
                 try:
                     description = message.text
-                    db.update(data[1], data[2], description, data[4], id)
+                    db.update(data[1], data[2], data[3],
+                              description, data[5], id)
                     bot.send_message(chat_id, "Data updated.")
                 except:
                     bot.send_message(
@@ -474,7 +498,7 @@ def update(message, id, updatebox):
             elif updatebox == "date" or updatebox == "Date":
                 try:
                     date = message.text
-                    db.update(data[1], data[2], data[3], date, id)
+                    db.update(data[1], data[2], data[3], data[4], date, id)
                     bot.send_message(chat_id, "Data updated.")
                 except:
                     bot.send_message(
@@ -497,10 +521,11 @@ def delete(message):
             db = Database(chat_id)
             data = db.select(id)
             if data:
-                id, wealth, learning, description, date = data[0]
+                id, wealth, learning, project, description, date = data[0]
                 bot.send_message(chat_id, f"id: {id}\n"
                                  f"Wealth: {wealth}\n"
                                  f"Learning: {learning}\n"
+                                 f"Project: {project}\n"
                                  f"Description: {description}\n"
                                  f"Date: {date}\n")
                 bot.send_message(
