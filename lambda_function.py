@@ -239,7 +239,7 @@ def replydate(message):
             date = []
             for i in data:
                 wealth.append(int(i[1]))
-                date.append(i[4][:-3])
+                date.append(i[5][:-3])
             plt.plot(date, wealth)
             plt.xlabel('Date')
             plt.xticks(rotation=0, fontsize=6)
