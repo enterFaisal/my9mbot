@@ -4,21 +4,26 @@ import sqlite3
 conn = sqlite3.connect('Database.db')
 c = conn.cursor()
 
+# id INTEGER PRIMARY KEY, Wealth TEXT, Learning TEXT,Project TEXT, Description TEXT, Date TEXT
+# add income to U1015728318 table to before last column
 
-# get all the tables
-c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+c.execute("ALTER TABLE U1015728318 ADD COLUMN Income TEXT")
+# make the date last column
+c.execute("ALTER TABLE U1015728318 ADD COLUMN Date_new TEXT")
+# copy the old date column to the new date column
+c.execute("UPDATE U1015728318 SET Date_new = Date")
+c.execute("ALTER TABLE U1015728318 DROP COLUMN Date")
+c.execute("ALTER TABLE U1015728318 RENAME COLUMN Date_new TO Date")
 
-# # for all the tables add new columns
-for table in c.fetchall():
-    c.execute("ALTER TABLE " + table[0] + " ADD COLUMN 'Project' TEXT")
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY, Wealth STRING, Learning STRING, Project TEXT, Description STRING, Date STRING)".format(
-            table[0]+"_new"))
-    c.execute("INSERT INTO {} (id, Wealth, Learning, Project, Description, Date) SELECT id, Wealth, Learning, Project, Description, Date FROM {}".format(
-        table[0]+"_new", table[0]))
-    c.execute("DROP TABLE {}".format(table[0]))
-    c.execute("ALTER TABLE {} RENAME TO {}".format(table[0]+"_new", table[0]))
+# make Income = 990
+c.execute("UPDATE U1015728318 SET Income = 990")
 
 
-# commit the changes
 conn.commit()
+conn.close()
+
+print("Database updated")
+
+
+# # commit the changes
+# conn.commit()
