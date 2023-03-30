@@ -237,7 +237,7 @@ def replydate(message):
             date = []
             for i in data:
                 wealth.append(int(i[1]))
-                date.append(i[5][:-3])
+                date.append(i[6][:-3])
             plt.plot(date, wealth)
             plt.xlabel('Date')
             plt.xticks(rotation=0, fontsize=6)
@@ -266,7 +266,7 @@ def getwealth(message):
         add = False
     else:
         bot.send_message(chat_id, "Please enter your wealth:")
-        bot.register_next_step_handler(message, getlearning)
+        bot.register_next_step_handler(message, getincome)
 
 
 def getincome(message):
