@@ -285,7 +285,7 @@ def getlearning(message, wealth):
     chat_id = message.chat.id
     income = message.text
     bot.send_message(chat_id, "Please enter your learning:")
-    bot.register_next_step_handler(message, getdescription, wealth, income)
+    bot.register_next_step_handler(message, getproject, wealth, income)
 
 
 def getproject(message, wealth, income):
