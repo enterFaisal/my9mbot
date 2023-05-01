@@ -158,8 +158,8 @@ def file(message):
     data = db.selectAll()
     with open('data{}.csv'.format(chat_id), 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['id', 'Wealth', 'Learning',
-                        'Project', 'Description', 'Income', 'Date'])
+        writer.writerow(['id', 'Wealth', 'Income', 'Learning',
+                        'Project', 'Description',  'Date'])
         writer.writerows(data)
     f.close()
     bot.send_document(chat_id, open('data{}.csv'.format(chat_id), 'rb'))
